@@ -1,0 +1,96 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <windows.h>
+using namespace std;
+
+struct Data {
+    string surname;
+    int points;
+    int place;
+};
+
+const int TABLE_SIZE = 15;
+
+class HashTable {
+private:
+    vector<Data> table;
+    int hash1(int key) {
+        return key % TABLE_SIZE;
+    }
+    int hash2(int key) {
+        return (key / TABLE_SIZE) % TABLE_SIZE;
+    }
+public:
+    HashTable() {
+        table.resize(TABLE_SIZE);
+    }
+    void insert(Data data) {
+        int index = hash1(data.place);
+        int step = hash2(data.place);
+        while (!table[index].surname.empty()) {
+            index = (index + step) % TABLE_SIZE;
+        }
+        table[index] = data;
+    }
+    Data* search(int key) {
+        int index = hash1(key);
+        int step = hash2(key);
+        while (!table[index].surname.empty() && table[index].place != key) {
+            index = (index + step) % TABLE_SIZE;
+        }
+        if (table[index].surname.empty()) {
+            return nullptr;
+        }
+        else {
+            return &table[index];
+        }
+    }
+    void print() {
+        for (int i = 0; i < TABLE_SIZE; i++) {
+            cout << i << ": " << table[i].surname << " " << table[i].points << " " << table[i].place << endl;
+        }
+    }
+};
+
+int main(int argc, char* argv[])
+{
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+    Data data[7];
+    for (int i = 0; i < 7; i++) {
+        cout << "Введите фамилию: ";
+        cin >> data[i].surname;
+        cout << "Введите количество очков: ";
+        cin >> data[i].points;
+        cout << "Введите занятое место: ";
+        cin >> data[i].place;
+    }
+
+    HashTable table;
+    for (int i = 0; i < 7; i++) {
+        table.insert(data[i]);
+    }
+
+    cout << "Исходный массив:" << endl;
+    for (int i = 0; i < 7; i++) {
+        cout << data[i].surname << " " << data[i].points << " " << data[i].place << endl;
+    }
+
+    cout << "Хеш-таблица:" << endl;
+    table.print();
+
+    cout << "Введите ключ для поиска: ";
+    int key;
+    cin >> key;
+
+    Data* result = table.search(key);
+    if (result == nullptr) {
+        cout << "Элемент не найден" << endl;
+    }
+    else {
+        cout << "Найденный элемент: " << result->surname << " " << result->points << " " << result->place << endl;
+    }
+
+    return 0;
+}
