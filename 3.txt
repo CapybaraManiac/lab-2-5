@@ -1,0 +1,143 @@
+#include <iostream>
+#include <string>
+#include <map>
+#include <locale.h>
+
+using namespace std;
+
+// Структура узла двоичного дерева
+struct Node {
+    char data;
+    Node* left;
+    Node* right;
+};
+
+// Функция для создания нового узла
+Node* createNode(char data) {
+    Node* newNode = new Node();
+    if (!newNode) {
+        cout << "Ошибка при выделении памяти!" << endl;
+        return NULL;
+    }
+    newNode->data = data;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+// Функция для вставки нового узла в дерево
+Node* insertNode(Node* root, char data) {
+    // Если дерево пустое, создаем новый узел и делаем его корнем
+    if (root == NULL) {
+        root = createNode(data);
+        return root;
+    }
+    // Рекурсивно вставляем новый узел в соответствующее поддерево
+    if (data < root->data)
+        root->left = insertNode(root->left, data);
+    else if (data > root->data)
+        root->right = insertNode(root->right, data);
+    return root;
+}
+
+// Функция для вывода дерева на экран
+void printTree(Node* root, string indent, bool last) {
+    if (root != nullptr) {
+        cout << indent;
+        if (last) {
+            cout << "'- ";
+            indent += "  ";
+        }
+        else {
+            cout << "|- ";
+            indent += "| ";
+        }
+        cout << root->data << endl;
+        printTree(root->left, indent, false);
+        printTree(root->right, indent, true);
+    }
+}
+
+// Функция для печати оставшихся элементов дерева через пробел
+void printElements(Node* root) {
+    if (root != nullptr) {
+        printElements(root->left);
+        cout << root->data << " ";
+        printElements(root->right);
+    }
+}
+
+// Функция для удаления повторяющихся элементов из дерева
+Node* removeDuplicates(Node* root, map<char, int>& freq) {
+    if (root == NULL)
+        return NULL;
+
+    root->left = removeDuplicates(root->left, freq);
+    root->right = removeDuplicates(root->right, freq);
+
+    if (freq[root->data] > 1) {
+        if (root->left == NULL && root->right == NULL) {
+            freq[root->data]--;
+            delete root;
+            return NULL;
+        }
+        else if (root->left == NULL) {
+            Node* temp = root->right;
+            freq[root->data]--;
+            delete root;
+            return temp;
+        }
+        else if (root->right == NULL) {
+            Node* temp = root->left;
+            freq[root->data]--;
+            delete root;
+            return temp;
+        }
+        else {
+            Node* minNode = root->right;
+            while (minNode->left != NULL)
+                minNode = minNode->left;
+            root->data = minNode->data;
+            freq[root->data]--;
+            root->right = removeDuplicates(root->right, freq);
+            return root;
+        }
+    }
+    return root;
+}
+
+
+int main() {
+    setlocale(0, "ru");
+
+    string input;
+    cout << "Введите строку: ";
+    getline(cin, input);
+
+    Node* root = NULL;
+    map<char, int> freq;
+
+    // Строим двоичное дерево поиска из букв введенной строки
+    for (char ch : input) {
+        if (isalpha(ch)) {
+            ch = tolower(ch);  // Приводим буквы к нижнему регистру для сравнения
+            if (freq[ch] == 0) {
+                root = insertNode(root, ch);
+            }
+            freq[ch]++;
+        }
+    }
+
+    // Выводим дерево на экран
+    cout << "Двоичное дерево поиска:" << endl;
+    printTree(root, "", true);
+
+    // Удаляем повторяющиеся элементы из дерева
+    root = removeDuplicates(root, freq);
+
+    // Выводим оставшиеся элементы дерева
+    cout << "\nОставшиеся элементы дерева:" << endl;
+    printElements(root);
+    cout << endl;
+
+    return 0;
+}
